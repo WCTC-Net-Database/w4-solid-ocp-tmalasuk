@@ -1,87 +1,129 @@
+using System.Dynamic;
+using W4_assignment_template;
 using W4_assignment_template.Interfaces;
 using W4_assignment_template.Models;
 using W4_assignment_template.Services;
 
-namespace W4_assignment_template;
+IFileHandler fileHandler = null;
+List<Character> characters = null;
 
-class Program
+
+var fileSwitch = new FileSwtich();
+string filePath = fileSwitch.prompt();
+fileHandler = fileSwitch.getHandler(filePath); 
+characters = fileHandler.ReadCharacters(filePath);
+
+while (true)
 {
-    static IFileHandler fileHandler;
-    static List<Character> characters;
+    Console.WriteLine("Menu:");
+    Console.WriteLine("1. Display Characters");
+    Console.WriteLine("2. Add Character");
+    Console.WriteLine("3. Level Up Character");
+    Console.WriteLine("4. Switch File Type");
+    Console.WriteLine("5. Exit (Save Changes)");
+    Console.Write("Enter your choice: ");
+    string choice = Console.ReadLine();
 
-    static void Main()
+    switch (choice)
     {
-        // TODO (Stretch Goal): 
-        // Allow the user to choose the file format (CSV or JSON) at runtime.
-        // You can add a menu option to switch between CsvFileHandler and JsonFileHandler,
-        // and update filePath accordingly (e.g., "input.csv" or "input.json").
-        // This enables dynamic switching of file formats using the IFileHandler interface.
+        case "1":
+            DisplayAllCharacters();
+            break;
+        case "2":
+            AddCharacter();
+            break;
+        case "3":
+            LevelUpCharacter();
+            break;
+        case "4":
+            filePath = fileSwitch.prompt();
+            fileHandler = fileSwitch.getHandler(filePath);
+            break;
+        case "5":
+            fileHandler.WriteCharacters(filePath, characters);
+            return;
+        default:
+            Console.WriteLine("Invalid choice. Please try again.");
+            break;
+    }
+}
 
-        string filePath = "input.csv"; // Default to CSV file
-        fileHandler = new CsvFileHandler(); // Default to CSV handler
-        characters = fileHandler.ReadCharacters(filePath);
+void DisplayAllCharacters()
+{
+    foreach (var character in characters)
+    {
+        Console.WriteLine($"Name: {character.Name}");
+        Console.WriteLine($"Class: {character.Class}");
+        Console.WriteLine($"Level: {character.Level}");
+        Console.WriteLine($"HP: {character.HP}");
+        Console.WriteLine($"Equipment: {string.Join(", ", character.Equipment)}");
+        Console.WriteLine("+---------------------+");
+    }
+    Console.WriteLine();
+}
 
-        while (true)
-        {
-            Console.WriteLine("Menu:");
-            Console.WriteLine("1. Display Characters");
-            Console.WriteLine("2. Add Character");
-            Console.WriteLine("3. Level Up Character");
-            Console.WriteLine("4. Exit");
-            Console.Write("Enter your choice: ");
-            string choice = Console.ReadLine();
+void AddCharacter()
+{
+    Console.Write("Enter character name: ");
+    var name = Console.ReadLine()?.Trim();
 
-            switch (choice)
-            {
-                case "1":
-                    DisplayAllCharacters();
-                    break;
-                case "2":
-                    AddCharacter();
-                    break;
-                case "3":
-                    LevelUpCharacter();
-                    break;
-                case "4":
-                    fileHandler.WriteCharacters(filePath, characters);
-                    return;
-                default:
-                    Console.WriteLine("Invalid choice. Please try again.");
-                    break;
-            }
-        }
+    Console.Write("Enter character profession: ");
+    var profession = Console.ReadLine()?.Trim();
+
+    Console.Write("Enter character level: ");
+    var levelInput = Console.ReadLine();
+    int level;
+    while (!int.TryParse(levelInput, out level) || level < 1)
+    {
+        Console.Write("Invalid input. Please enter a positive integer for level: ");
+        levelInput = Console.ReadLine();
     }
 
-    static void DisplayAllCharacters()
+    Console.Write("Enter character HP: ");
+    var hpInput = Console.ReadLine();
+    int hp;
+    while (!int.TryParse(hpInput, out hp) || hp < 1)
     {
-        foreach (var character in characters)
-        {
-            Console.WriteLine($"Name: {character.Name}, Class: {character.Class}, Level: {character.Level}, HP: {character.HP}, Equipment: {string.Join(", ", character.Equipment)}");
-        }
+        Console.Write("Invalid input. Please enter a positive integer for HP: ");
+        hpInput = Console.ReadLine();
     }
 
-    static void AddCharacter()
+    var equipment = new List<string>();
+    var item = "";
+    while (equipment.Count == 0 || item != "done")
     {
-        // TODO: Implement logic to add a new character
-        // Prompt for character details (name, class, level, hit points, equipment)
-        // Add the new character to the characters list
+        Console.Write("Enter one equipment item (or type 'done' to finish): ");
+        item = Console.ReadLine()?.Trim();
+        if (item?.ToLower() == "done")
+        {
+            break;
+        }
+
+        equipment.Add(item);
+
     }
 
-    static void LevelUpCharacter()
-    {
-        Console.Write("Enter the name of the character to level up: ");
-        string nameToLevelUp = Console.ReadLine();
+    var newCharacter = new Character(name, profession, level, hp, equipment);
+    characters.Add(newCharacter);
 
-        var character = characters.Find(c => c.Name.Equals(nameToLevelUp, StringComparison.OrdinalIgnoreCase));
-        if (character != null)
-        {
-            // TODO: Implement logic to level up the character
-            // character.Level++;
-            // Console.WriteLine($"Character {character.Name} leveled up to level {character.Level}!");
-        }
-        else
-        {
-            Console.WriteLine("Character not found.");
-        }
+    Console.WriteLine($"Character {name} added successfully!");
+    Console.WriteLine("");
+}
+
+void LevelUpCharacter()
+{
+    Console.Write("Enter the name of the character to level up: ");
+    string nameToLevelUp = Console.ReadLine();
+
+    var character = characters.Find(c => c.Name.Equals(nameToLevelUp, StringComparison.OrdinalIgnoreCase));
+    if (character != null)
+    {
+        character.Level++;
+        Console.WriteLine($"Character {nameToLevelUp} has been leveled up! Current level: {character.Level}");
+        Console.WriteLine("");
+    }
+    else
+    {
+        Console.WriteLine("Character not found.");
     }
 }
